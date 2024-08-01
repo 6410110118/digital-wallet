@@ -6,13 +6,22 @@ from pydantic import BaseModel, ConfigDict
 from sqlmodel import Field, SQLModel, create_engine, Session, select
 
 
+#Base Models
+class BaseWallet(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    user_id : int
+    balance : float
+
 class BaseItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str
     description: str | None = None
-    price: float = 0.12
+    price: float
     tax: float | None = None
+
+
+
 
 
 class CreatedItem(BaseItem):
@@ -25,6 +34,12 @@ class UpdatedItem(BaseItem):
 
 class Item(BaseItem):
     id: int
+
+
+#Database Model
+
+class DBWallet(BaseWallet, SQLModel , table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
 
 
 class DBItem(Item, SQLModel, table=True):
@@ -59,13 +74,32 @@ def get_session():
 app = FastAPI()
 
 
+# API endpoints
+
 @app.get("/")
 def root():
     return {"message": "Hello World"}
 
+@app.post("/wallets")
+async def create_wallet(wallet: BaseWallet):
+    with Session(engine) as session:
+        db_wallet = DBWallet(**wallet.dict())
+        session.add(db_wallet)
+        session.commit()
+        session.refresh(db_wallet)
+    return db_wallet
+
+@app.get("/wallets/{wallet_id}")
+async def read_wallet(wallet_id: int):
+    with Session(engine) as session:
+        wallet = session.get(DBWallet, wallet_id)
+        if wallet:
+            return wallet
+    raise HTTPException(status_code=404, detail="Wallet not found")
+
 
 @app.post("/items")
-async def create_item(item: CreatedItem) -> Item:
+async def create_item(item: BaseItem):
     print("created_item", item)
     data = item.dict()
     dbitem = DBItem(**data)
@@ -118,3 +152,6 @@ async def delete_item(item_id: int) -> dict:
         session.commit()
 
     return dict(message="delete success")
+
+
+
