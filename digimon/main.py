@@ -27,6 +27,13 @@ class BaseMerchant(BaseModel):
     description: Optional[str] = None
 
 
+class BaseTransaction(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    wallet_id: int
+    merchant_id: int
+    item_id: int
+    amount:float
+
 
 
 
@@ -53,6 +60,8 @@ class DBItem(Item, SQLModel, table=True):
 class DBMerchant(BaseMerchant, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
+class DBTransection(BaseTransaction, SQLModel , table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
 class ItemList(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     items: list[Item]
@@ -177,4 +186,23 @@ async def read_merchant(merchant_id: int):
         if merchant:
             return merchant
     raise HTTPException(status_code=404, detail="Merchant not found")
+
+@app.post("/transection")
+async def create_transection(transection: BaseTransaction):
+    with Session(engine) as session:
+        db_transection = DBTransection(**transection.dict())
+        session.add(db_transection)
+        session.commit()
+        session.refresh(db_transection)
+
+    return db_transection
+
+@app.get("/transection/{transection_id}")
+async def read_transection(transection_id: int):
+    with Session(engine) as session:
+        transection = session.get(DBTransection, transection_id)
+
+        if transection:
+            return transection
+    raise HTTPException(status_code=404, detail="Transection not found")
 
