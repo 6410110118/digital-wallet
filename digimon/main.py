@@ -21,6 +21,12 @@ class BaseItem(BaseModel):
     tax: float | None = None
 
 
+class BaseMerchant(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    name: str
+    description: Optional[str] = None
+
+
 
 
 
@@ -44,7 +50,8 @@ class DBWallet(BaseWallet, SQLModel , table=True):
 
 class DBItem(Item, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-
+class DBMerchant(BaseMerchant, SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
 
 class ItemList(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -154,4 +161,20 @@ async def delete_item(item_id: int) -> dict:
     return dict(message="delete success")
 
 
+@app.post("/merchants")
+async def create_merchant(merchant: BaseMerchant):
+    with Session(engine) as session:
+        db_merchant = DBMerchant(**merchant.dict())
+        session.add(db_merchant)
+        session.commit()
+        session.refresh(db_merchant)
+    return db_merchant
+
+@app.get("/merchants/{merchant_id}")
+async def read_merchant(merchant_id: int):
+    with Session(engine) as session:
+        merchant = session.get(DBMerchant, merchant_id)
+        if merchant:
+            return merchant
+    raise HTTPException(status_code=404, detail="Merchant not found")
 
