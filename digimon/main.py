@@ -162,6 +162,7 @@ app = FastAPI()
 def root():
     return {"message": "Hello World"}
 
+# Wallet endpoints
 @app.post("/wallets")
 async def create_wallet(wallet: BaseWallet):
     with Session(engine) as session:
@@ -171,13 +172,43 @@ async def create_wallet(wallet: BaseWallet):
         session.refresh(db_wallet)
     return db_wallet
 
+@app.get("/wallets")
+async def read_wallets() -> WalletList:
+    with Session(engine) as session:
+        wallets = session.exec(select(DBWallet)).all()
+        return WalletList.from_orm(dict(wallets=wallets, page_size=0, page=0, size_per_page=0))
+
 @app.get("/wallets/{wallet_id}")
 async def read_wallet(wallet_id: int):
     with Session(engine) as session:
-        wallet = session.get(DBWallet, wallet_id).all()
+        wallet = session.get(DBWallet, wallet_id)
         if wallet:
             return wallet
     raise HTTPException(status_code=404, detail="Wallet not found")
+
+@app.put("/wallets/{wallet_id}")
+
+async def update_wallet(wallet_id: int, wallet: UpdatedWallet) -> Wallet:
+    print("update_wallet", wallet)
+    data = wallet.dict()
+    with Session(engine) as session:
+        db_wallet = session.get(DBWallet, wallet_id)
+        db_wallet.update_from_dict(data)
+        session.commit()
+        session.refresh(db_wallet)
+    return Wallet.from_orm(db_wallet)
+
+@app.delete("/wallets/{wallet_id}")
+async def delete_wallet(wallet_id:int) -> dict:
+    with Session(engine) as sesion:
+        db_wallet = sesion.get(DBWallet, wallet_id)
+        sesion.delete(db_wallet)
+        sesion.commit()
+    return dict(massage="delete success")
+
+################################################################
+
+# Item Endpoints
 
 
 @app.post("/items")
@@ -235,6 +266,9 @@ async def delete_item(item_id: int) -> dict:
 
     return dict(message="delete success")
 
+########################################################################
+
+# Merchant endpoints
 
 @app.post("/merchants")
 async def create_merchant(merchant: BaseMerchant):
@@ -245,6 +279,12 @@ async def create_merchant(merchant: BaseMerchant):
         session.refresh(db_merchant)
     return db_merchant
 
+@app.get("/merchants")
+async def read_merchants() -> MerchantList:
+    with Session(engine) as session:
+        merchants = session.exec(select(DBMerchant)).all()
+        return MerchantList.from_orm(dict(merchants=merchants, page_size=0, page=0, size_per_page=0))
+    
 @app.get("/merchants/{merchant_id}")
 async def read_merchant(merchant_id: int):
     with Session(engine) as session:
@@ -252,6 +292,31 @@ async def read_merchant(merchant_id: int):
         if merchant:
             return merchant
     raise HTTPException(status_code=404, detail="Merchant not found")
+
+@app.put("/merchants/{merchant_id}")
+async def update_merchant(merchant_id: int, merchant: UpdatedMerchant) -> Merchant:
+    print("update_merchant", merchant)
+    data = merchant.dict()
+    with Session(engine) as session:
+        db_merchant = session.get(DBMerchant, merchant_id)
+        db_merchant.sqlmodel_update(data)
+        session.add(db_merchant)
+        session.commit()
+        session.refresh(db_merchant)
+    return Merchant.from_orm(db_merchant)
+
+@app.delete("/merchants/{merchant_id}")
+async def delete_merchant(merchant_id: int) -> dict:
+    with Session(engine) as session:
+        db_merchant = session.get(DBMerchant, merchant_id)
+        session.delete(db_merchant)
+        session.commit()
+    return dict(message="delete success")
+
+
+################################################################
+
+# Transaction endpoints
 
 @app.post("/transection")
 async def create_transection(transection: BaseTransaction):
@@ -263,6 +328,13 @@ async def create_transection(transection: BaseTransaction):
 
     return db_transection
 
+
+@app.get("/transections")
+async def read_transections() -> TransactionList:
+    with Session(engine) as session:
+        transections = session.exec(select(DBTransection)).all()
+        return TransactionList.from_orm(dict(transactions=transections, page_size=0, page=0, size_per_page=0))
+    
 @app.get("/transection/{transection_id}")
 async def read_transection(transection_id: int):
     with Session(engine) as session:
@@ -272,3 +344,23 @@ async def read_transection(transection_id: int):
             return transection
     raise HTTPException(status_code=404, detail="Transection not found")
 
+@app.put("/transection/{transection_id}")
+
+async def update_transection(transection_id: int, transection: UpdatedTransaction) -> Transaction: 
+    print("update_transection", transection)
+    data = transection.dict()
+    with Session(engine) as session:
+        db_transection = session.get(DBTransection, transection_id)
+        db_transection.sqlmodel_update(data)
+        session.add(db_transection)
+        session.commit()
+        session.refresh(db_transection)
+    return Transaction.from_orm(db_transection)
+
+@app.delete("/transection/{transection_id}")
+async def delete_transection(transection_id: int) -> dict:
+    with Session(engine) as session:
+        db_transection = session.get(DBTransection, transection_id)
+        session.delete(db_transection)
+        session.commit()
+    return dict(message="delete success")
