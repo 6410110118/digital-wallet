@@ -11,7 +11,7 @@ from sqlmodel import Field, SQLModel, create_engine, Session, select
 # Wallet
 class BaseWallet(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    user_id : int
+    
     balance : float
 
 class CreatedWallet(BaseWallet):
@@ -20,7 +20,7 @@ class CreatedWallet(BaseWallet):
 class UpdatedWallet(BaseWallet):
     pass
 
-class wallet(BaseWallet):
+class Wallet(BaseWallet):
     id: int
 
 # Item
@@ -58,7 +58,7 @@ class CreatedMerchant(BaseMerchant):
 class UpdatedMerchant(BaseMerchant):
     pass
 
-class merchant(BaseMerchant):
+class Merchant(BaseMerchant):
     id: int
 
 
@@ -70,13 +70,13 @@ class BaseTransaction(BaseModel):
     item_id: int
     amount:float
 
-class CreatedTransection(BaseTransection):
+class CreatedTransaction(BaseTransaction):
     pass
 
-class UpdatedTransection(BaseTransection):
+class UpdatedTransaction(BaseTransaction):
     pass
 
-class Transection(BaseTransection):
+class Transaction(BaseTransaction):
     id: int
 
 
@@ -84,7 +84,7 @@ class Transection(BaseTransection):
 
 #Database Model
 
-class DBWallet(BaseWallet, SQLModel , table=True):
+class DBWallet(Wallet, SQLModel , table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
 
@@ -98,7 +98,7 @@ class DBTransection(BaseTransaction, SQLModel , table=True):
 
 #WalletList
 
-class walletList(BaseModel):
+class WalletList(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     wallets: list[Wallet]
@@ -139,7 +139,7 @@ class TransactionList(BaseModel):
 connect_args = {}
 
 engine = create_engine(
-    "postgresql+pg8000://postgres:123456@localhost/digimon",
+    "postgresql+pg8000://postgres:123456@localhost/digimondb",
     echo=True,
     connect_args=connect_args,
 )
