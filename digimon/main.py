@@ -7,11 +7,23 @@ from sqlmodel import Field, SQLModel, create_engine, Session, select
 
 
 #Base Models
+
+# Wallet
 class BaseWallet(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     user_id : int
     balance : float
 
+class CreatedWallet(BaseWallet):
+    pass
+
+class UpdatedWallet(BaseWallet):
+    pass
+
+class wallet(BaseWallet):
+    id: int
+
+# Item
 class BaseItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -19,23 +31,6 @@ class BaseItem(BaseModel):
     description: str | None = None
     price: float
     tax: float | None = None
-
-
-class BaseMerchant(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    name: str
-    description: Optional[str] = None
-
-
-class BaseTransaction(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    wallet_id: int
-    merchant_id: int
-    item_id: int
-    amount:float
-
-
-
 
 class CreatedItem(BaseItem):
     pass
@@ -47,6 +42,44 @@ class UpdatedItem(BaseItem):
 
 class Item(BaseItem):
     id: int
+
+
+
+# Merchant
+class BaseMerchant(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    name: str
+    description: Optional[str] = None
+
+
+class CreatedMerchant(BaseMerchant):
+    pass
+
+class UpdatedMerchant(BaseMerchant):
+    pass
+
+class merchant(BaseMerchant):
+    id: int
+
+
+# Trasection 
+class BaseTransaction(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    wallet_id: int
+    merchant_id: int
+    item_id: int
+    amount:float
+
+class CreatedTransection(BaseTransection):
+    pass
+
+class UpdatedTransection(BaseTransection):
+    pass
+
+class Transection(BaseTransection):
+    id: int
+
+
 
 
 #Database Model
