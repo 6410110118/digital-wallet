@@ -174,7 +174,7 @@ async def create_wallet(wallet: BaseWallet):
 @app.get("/wallets/{wallet_id}")
 async def read_wallet(wallet_id: int):
     with Session(engine) as session:
-        wallet = session.get(DBWallet, wallet_id)
+        wallet = session.get(DBWallet, wallet_id).all()
         if wallet:
             return wallet
     raise HTTPException(status_code=404, detail="Wallet not found")
@@ -248,7 +248,7 @@ async def create_merchant(merchant: BaseMerchant):
 @app.get("/merchants/{merchant_id}")
 async def read_merchant(merchant_id: int):
     with Session(engine) as session:
-        merchant = session.get(DBMerchant, merchant_id)
+        merchant = session.get(DBMerchant, merchant_id).all()
         if merchant:
             return merchant
     raise HTTPException(status_code=404, detail="Merchant not found")
@@ -266,7 +266,7 @@ async def create_transection(transection: BaseTransaction):
 @app.get("/transection/{transection_id}")
 async def read_transection(transection_id: int):
     with Session(engine) as session:
-        transection = session.get(DBTransection, transection_id)
+        transection = session.get(DBTransection, transection_id).all()
 
         if transection:
             return transection
