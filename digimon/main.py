@@ -95,9 +95,42 @@ class DBMerchant(BaseMerchant, SQLModel, table=True):
 
 class DBTransection(BaseTransaction, SQLModel , table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+
+#WalletList
+
+class walletList(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    wallets: list[Wallet]
+    page: int
+    page_size: int
+    size_per_page: int
+
+
+# ItemList
 class ItemList(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     items: list[Item]
+    page: int
+    page_size: int
+    size_per_page: int
+
+
+# MerchantList
+class MerchantList(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    merchants: list[Merchant]
+    page: int
+    page_size: int
+    size_per_page: int
+
+# TransectionList
+
+class TransactionList(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    transactions: list[Transaction]
     page: int
     page_size: int
     size_per_page: int
