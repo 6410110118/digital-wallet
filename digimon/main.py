@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
-from sqlmodel import Field, SQLModel, create_engine, Session, select
+from sqlmodel import Field, Relationship, SQLModel, create_engine, Session, select
 
 
 #Base Models
@@ -31,6 +31,8 @@ class BaseItem(BaseModel):
     description: str | None = None
     price: float
     tax: float | None = None
+    merchant_id: int
+
 
 class CreatedItem(BaseItem):
     pass
@@ -90,8 +92,14 @@ class DBWallet(Wallet, SQLModel , table=True):
 
 class DBItem(Item, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    merchant_id: Optional[int] = Field(default=None, foreign_key="dbmerchant.id")
+    merchant: Optional["DBMerchant"] = Relationship(back_populates="items")
 class DBMerchant(BaseMerchant, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    items: list["DBItem"] = Relationship(back_populates="merchant", cascade_delete=True)
+
+
+
 
 class DBTransection(BaseTransaction, SQLModel , table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -144,7 +152,7 @@ engine = create_engine(
     connect_args=connect_args,
 )
 
-
+SQLModel.metadata.drop_all(engine)
 SQLModel.metadata.create_all(engine)
 
 
@@ -217,12 +225,14 @@ async def create_item(item: BaseItem):
     data = item.dict()
     dbitem = DBItem(**data)
     with Session(engine) as session:
+        merchant = session.get(DBMerchant, item.merchant_id)
+        if not merchant:
+            raise HTTPException(status_code=404, detail="Merchant not found")
         session.add(dbitem)
         session.commit()
         session.refresh(dbitem)
-
-    # return Item.parse_obj(dbitem.dict())
     return Item.from_orm(dbitem)
+
 
 
 @app.get("/items")
@@ -285,13 +295,10 @@ async def read_merchants() -> MerchantList:
         merchants = session.exec(select(DBMerchant)).all()
         return MerchantList.from_orm(dict(merchants=merchants, page_size=0, page=0, size_per_page=0))
     
-@app.get("/merchants/{merchant_id}")
-async def read_merchant(merchant_id: int):
-    with Session(engine) as session:
-        merchant = session.get(DBMerchant, merchant_id).all()
-        if merchant:
-            return merchant
-    raise HTTPException(status_code=404, detail="Merchant not found")
+@app.post("/merchants/{merchant_id}/items")
+async def create_merchant_item(merchant_id: int, item: BaseItem):
+    item.merchant_id = merchant_id
+    return await create_item(item)
 
 @app.put("/merchants/{merchant_id}")
 async def update_merchant(merchant_id: int, merchant: UpdatedMerchant) -> Merchant:
