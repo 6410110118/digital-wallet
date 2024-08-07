@@ -23,6 +23,7 @@ class Merchant(BaseMerchant):
     id: int
 
 class DBMerchant(BaseMerchant, SQLModel, table=True):
+    __table_args__ = {'extend_existing': True}
     id: Optional[int] = Field(default=None, primary_key=True)
     items: list["items.DBItem"] = Relationship(back_populates="merchant", cascade_delete=True)
 

@@ -23,6 +23,7 @@ class Wallet(BaseWallet):
 
 
 class DBWallet(Wallet, SQLModel , table=True):
+    __table_args__ = {'extend_existing': True}
     id: Optional[int] = Field(default=None, primary_key=True)
 
 class WalletList(BaseModel):
