@@ -38,9 +38,10 @@ class ItemList(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     items: List[Item]
     page: int
-
     page_count: int
+    page_size: int
     size_per_page: int
+    
 
 # Import the BaseMerchant module correctly
 
