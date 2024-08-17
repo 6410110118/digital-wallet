@@ -9,6 +9,7 @@ from .merchants import *
 from .transactions import *
 from .wallets import *
 from .users import *
+from .customers import *
 
 connect_args = {}
 
