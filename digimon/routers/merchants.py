@@ -21,20 +21,20 @@ router = APIRouter(prefix="/merchants")
 
 from .. import deps
 
-@router.post("")
-async def create_merchant(
-    merchant: CreatedMerchant,
-    session: Annotated[AsyncSession, Depends(get_session)],
-    current_user: User = Depends(deps.get_current_user)
-) -> Merchant:
-    print("create_merchant", merchant)
-    data = merchant.dict()
-    dbmerchant = DBMerchant(**data)
-    dbmerchant.user = current_user
-    session.add(dbmerchant)
-    await session.commit()
-    await session.refresh(dbmerchant)
-    return Merchant.from_orm(dbmerchant)
+# @router.post("")
+# async def create_merchant(
+#     merchant: CreatedMerchant,
+#     session: Annotated[AsyncSession, Depends(get_session)],
+#     current_user: User = Depends(deps.get_current_user)
+# ) -> Merchant:
+#     print("create_merchant", merchant)
+#     data = merchant.dict()
+#     dbmerchant = DBMerchant(**data)
+#     dbmerchant.user = current_user
+#     session.add(dbmerchant)
+#     await session.commit()
+#     await session.refresh(dbmerchant)
+#     return Merchant.from_orm(dbmerchant)
 
 
 
