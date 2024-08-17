@@ -4,8 +4,9 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from ..models.wallets import BaseWallet, DBWallet, UpdatedWallet, Wallet, WalletList
 from ..models import engine
-
+from .. import models
 router = APIRouter(prefix="/wallets")
+
 
 async def get_session():
     async with AsyncSession(engine) as session:
@@ -13,16 +14,17 @@ async def get_session():
 
 @router.post("/wallets")
 async def create_wallet(
-    wallet: Annotated[BaseWallet, Depends()],
-    session: Annotated[AsyncSession, Depends(get_session)]
-):
-    db_wallet = DBWallet(**wallet.dict())
-    session.add(db_wallet)
+    wallet: models.CreatedWallet,
+    session: Annotated[AsyncSession, Depends(models.get_session)]
+)-> models.Wallet | None:
+    data = wallet.dict()
+    dbwallet= models.DBWallet(**data)
+    session.add(dbwallet)
     await session.commit()
-    await session.refresh(db_wallet)
-    return db_wallet
+    await session.refresh(dbwallet)
 
-@router.get("/wallets")
+    return models.Item.from_orm(dbwallet)
+@router.get("")
 async def read_wallets(
     session: Annotated[AsyncSession, Depends(get_session)]
 ) -> WalletList:
@@ -30,7 +32,7 @@ async def read_wallets(
     wallets = result.all()
     return WalletList.from_orm(dict(wallets=wallets, page_size=0, page=0, size_per_page=0))
 
-@router.get("/wallets/{wallet_id}")
+@router.get("/{wallet_id}")
 async def read_wallet(
     wallet_id: int,
     session: Annotated[AsyncSession, Depends(get_session)]
@@ -40,12 +42,12 @@ async def read_wallet(
         return wallet
     raise HTTPException(status_code=404, detail="Wallet not found")
 
-@router.put("/wallets/{wallet_id}")
+@router.put("/{wallet_id}")
 async def update_wallet(
     wallet_id: int,
     wallet: Annotated[UpdatedWallet, Depends()],
     session: Annotated[AsyncSession, Depends(get_session)]
-) -> Wallet:
+) -> Wallet :
     print("update_wallet", wallet)
     data = wallet.dict()
     db_wallet = await session.get(DBWallet, wallet_id)
@@ -54,7 +56,7 @@ async def update_wallet(
     await session.refresh(db_wallet)
     return Wallet.from_orm(db_wallet)
 
-@router.delete("/wallets/{wallet_id}")
+@router.delete("/{wallet_id}")
 async def delete_wallet(
     wallet_id: int,
     session: Annotated[AsyncSession, Depends(get_session)]

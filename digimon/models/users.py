@@ -1,10 +1,13 @@
 import datetime
+from typing import TYPE_CHECKING, List
 
 import pydantic
 from pydantic import BaseModel, EmailStr, ConfigDict
-from sqlmodel import SQLModel, Field
+from sqlmodel import Relationship, SQLModel, Field
 
 from passlib.context import CryptContext
+if TYPE_CHECKING:
+    from .wallets import DBWallet
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -25,6 +28,7 @@ class User(BaseUser):
     register_date: datetime.datetime | None = pydantic.Field(
         example="2023-01-01T00:00:00.000000", default=None
     )
+    
 
 
 class ReferenceUser(BaseModel):
@@ -90,7 +94,9 @@ class DBUser(BaseUser, SQLModel, table=True):
     register_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
     updated_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
     last_login_date: datetime.datetime | None = Field(default=None)
-
+    #wallets_id: int | None = Field(default=None, foreign_key="wallets.id")
+    wallets: List["DBWallet"] = Relationship(back_populates="user")
+    
     async def has_roles(self, roles):
         for role in roles:
             if role in self.roles:

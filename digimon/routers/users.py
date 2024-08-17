@@ -62,18 +62,23 @@ async def create(
 
 @router.put("/{user_id}/change_password")
 async def change_password(
-    user_id: str,
+    user_id: int,
     password_update: models.ChangedPassword,
     session: Annotated[AsyncSession, Depends(models.get_session)],
     current_user: models.User = Depends(deps.get_current_user),
 ) -> dict:
-
     user = await session.get(models.DBUser, user_id)
 
-    if user:
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Not found this user",
+            detail="User not found",
+        )
+
+    if user.id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to change this user's password",
         )
 
     if not user.verify_password(password_update.current_password):
@@ -81,16 +86,19 @@ async def change_password(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password",
         )
-
+    
     user.set_password(password_update.new_password)
     session.add(user)
     await session.commit()
+
+    return {"message": "Password changed successfully"}
+
 
 
 @router.put("/{user_id}/update")
 async def update(
     request: Request,
-    user_id: str,
+    user_id: int,
     user_update: models.UpdatedUser,
     session: Annotated[AsyncSession, Depends(models.get_session)],
     current_user: models.User = Depends(deps.get_current_user),
@@ -98,19 +106,21 @@ async def update(
 
     user = await session.get(models.DBUser, user_id)
 
-    if user:
+    if user != current_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Not found this user",
         )
 
-    if not user.verify_password(password_update.current_password):
+    if not user.verify_password(user_update.current_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password",
         )
+    update_data = user_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(user, key, value)
 
-    user.update(**set_dict)
     session.add(user)
     await session.commit()
     await session.refresh(user)

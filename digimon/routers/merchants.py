@@ -30,11 +30,12 @@ async def create_merchant(
     print("create_merchant", merchant)
     data = merchant.dict()
     dbmerchant = DBMerchant(**data)
+    dbmerchant.user = current_user
     session.add(dbmerchant)
     await session.commit()
     await session.refresh(dbmerchant)
-
     return Merchant.from_orm(dbmerchant)
+
 
 
 

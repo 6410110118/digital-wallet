@@ -71,9 +71,11 @@ async def create_item(
     item: models.CreatedItem,
 
     session: Annotated[AsyncSession, Depends(models.get_session)],
+    current_user: models.User = Depends(deps.get_current_user),
 ) -> models.Item | None:
     data = item.dict()
     dbitem = models.DBItem(**data)
+    dbitem.user = current_user
     session.add(dbitem)
     await session.commit()
     await session.refresh(dbitem)
