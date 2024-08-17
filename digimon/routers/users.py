@@ -34,30 +34,84 @@ async def get(
     return user
 
 
-@router.post("/create")
-async def create(
+@router.post("/register_merchant")
+async def register_merchant(
     user_info: models.RegisteredUser,
+    merchant_info: models.CreatedMerchant,
     session: Annotated[AsyncSession, Depends(models.get_session)],
-) -> models.User:
+) -> models.Merchant:
 
-    result = await session.exec(
+    # check username
+    user_result = await session.execute(
         select(models.DBUser).where(models.DBUser.username == user_info.username)
     )
 
-    user = result.one_or_none()
+    user = user_result.scalar_one_or_none()
 
     if user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="This username is exists.",
+            detail="This username already exists.",
         )
 
+    # create new user
     user = models.DBUser.from_orm(user_info)
     await user.set_password(user_info.password)
+    user.role = models.UserRole.merchant
+    
     session.add(user)
-    await session.commit()
 
-    return user
+    # create new merchant
+    dbmerchant = models.DBMerchant(**merchant_info.dict())
+    dbmerchant.user = user
+
+    session.add(dbmerchant)
+    await session.commit()
+    
+    await session.refresh(user)
+    await session.refresh(dbmerchant)
+
+    return models.Merchant.from_orm(dbmerchant)
+
+@router.post("/register_customer")
+async def register_customer(
+    user_info: models.RegisteredUser,
+    customer_info: models.CreatedCustomer,
+    session: Annotated[AsyncSession, Depends(models.get_session)],
+) -> models.Merchant:
+
+    # check username
+    user_result = await session.execute(
+        select(models.DBUser).where(models.DBUser.username == user_info.username)
+    )
+
+    user = user_result.scalar_one_or_none()
+
+    if user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This username already exists.",
+        )
+
+    # create new user
+    user = models.DBUser.from_orm(user_info)
+    await user.set_password(user_info.password)
+    user.role = models.UserRole.customer
+    
+    session.add(user)
+
+    # create new customer
+    dbcustomer = models.DBCustomer(**customer_info.dict())
+    dbcustomer.user = user
+
+    session.add(dbcustomer)
+    await session.commit()
+    
+    await session.refresh(user)
+    await session.refresh(dbcustomer)
+
+    return models.Customer.from_orm(dbcustomer)
+
 
 
 @router.put("/{user_id}/change_password")
@@ -66,7 +120,7 @@ async def change_password(
     password_update: models.ChangedPassword,
     session: Annotated[AsyncSession, Depends(models.get_session)],
     current_user: models.User = Depends(deps.get_current_user),
-) -> dict:
+) -> models.Merchant:
     user = await session.get(models.DBUser, user_id)
 
     if not user:
