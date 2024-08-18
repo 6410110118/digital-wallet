@@ -38,12 +38,11 @@ async def get_wallet_by_customer_id(
     customer_id: int,
     session: Annotated[AsyncSession, Depends(models.get_session)]
 ) -> models.Wallet:
-    result = await session.exec(select(DBWallet).where(DBWallet.customer_id == customer_id))
+    result = await session.exec(select(DBWallet).where(DBWallet.user_id == customer_id))
     wallet = result.first()
     if wallet:
         return Wallet.from_orm(wallet)
     raise HTTPException(status_code=404, detail="Wallet not found")
-
 
 @router.get("/{merchant_id}")
 
@@ -51,7 +50,7 @@ async def get_wallet_by_merchant_id(
     merchant_id: int,
     session: Annotated[AsyncSession, Depends(models.get_session)]
 ) -> models.Wallet:
-    result = await session.exec(select(DBWallet).where(DBWallet.merchant_id == merchant_id))
+    result = await session.exec(select(DBWallet).where(DBWallet.user_id == merchant_id))
     wallet = result.first()
     if wallet:
         return Wallet.from_orm(wallet)

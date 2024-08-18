@@ -25,7 +25,7 @@ class Wallet(BaseWallet):
     id: int
     
     user_id: int
-    
+    role: UserRole
     
 
 class DBWallet(Wallet, SQLModel, table=True):
@@ -35,10 +35,10 @@ class DBWallet(Wallet, SQLModel, table=True):
     
     user : DBUser | None = Relationship()
     user_id: int = Field(default=None, foreign_key="users.id")
-    customer_id: int = Field(default=None, foreign_key="customers.id" )
-    customer: Optional["DBCustomer"] = Relationship(back_populates="wallets")
+    #customer_id: int = Field(default=None, foreign_key="customers.id" )
+    #customer: Optional["DBCustomer"] = Relationship(back_populates="wallets")
     
-    
+    role: UserRole = Field(default=None)
     
 class WalletList(BaseModel):
     model_config = ConfigDict(from_attributes=True)
