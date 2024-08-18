@@ -23,7 +23,7 @@ class UpdatedWallet(BaseWallet):
 
 class Wallet(BaseWallet):
     id: int
-    
+    balance: float
     user_id: int
     role: UserRole
     
@@ -31,7 +31,7 @@ class Wallet(BaseWallet):
 class DBWallet(Wallet, SQLModel, table=True):
     __table_args__ = {'extend_existing': True}
     id: Optional[int] = Field(default=None, primary_key=True)
-    balance: float
+    
     
     user : DBUser | None = Relationship(back_populates="wallets")
     user_id: int = Field(default=None, foreign_key="users.id")

@@ -5,6 +5,8 @@ from sqlmodel import select
 from ..models.wallets import BaseWallet, DBWallet, UpdatedWallet, Wallet, WalletList
 from ..models import engine
 from .. import models
+
+from .. import deps
 router = APIRouter(prefix="/wallets")
 
 
@@ -80,3 +82,28 @@ async def delete_wallet(
     await session.delete(db_wallet)
     await session.commit()
     return dict(message="delete success")
+
+
+@router.put("add")
+async def add_balance(
+    balance: UpdatedWallet,
+    
+    
+    session: Annotated[AsyncSession, Depends(models.get_session)],
+    current_user: models.User = Depends(deps.get_current_user)
+) -> Wallet :
+    statement = select(DBWallet).where(DBWallet.user_id == current_user.id)
+    result = await session.exec(statement)
+    dbwallet = result.one_or_none()
+    
+    dbwallet.balance += balance.balance
+
+    
+    
+    if dbwallet:
+        dbwallet.sqlmodel_update(dbwallet)
+        session.add(dbwallet)
+        await session.commit()
+        await session.refresh(dbwallet)
+        return Wallet.from_orm(dbwallet)
+    raise HTTPException(status_code=404, detail="Wallet not found")

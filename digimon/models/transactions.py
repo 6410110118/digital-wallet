@@ -1,16 +1,18 @@
 # Trasection
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
+from datetime import datetime
 
-
+from .users import *
 class BaseTransaction(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    wallet_id: int
-    merchant_id: int
+    
     item_id: int
-    amount:float
 
+    description: str | None = None
+
+    
 class CreatedTransaction(BaseTransaction):
     pass
 
@@ -19,11 +21,22 @@ class UpdatedTransaction(BaseTransaction):
 
 class Transaction(BaseTransaction):
     id: int
+    price: float
+    merchant_id: int
+    customer_id: int
+
 
 
 class DBTransection(BaseTransaction, SQLModel , table=True):
     __table_args__ = {'extend_existing': True}
     id: Optional[int] = Field(default=None, primary_key=True)
+    price: float = Field(default=None)
+    
+    merchant_id: int = Field(default=None)
+    
+    customer_id: int = Field(default=None)
+
+
 
 
 
