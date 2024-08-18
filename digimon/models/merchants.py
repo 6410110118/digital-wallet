@@ -1,5 +1,5 @@
 # Merchant
-from typing import Optional
+from typing import Optional , List
 from pydantic import BaseModel, ConfigDict
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -7,7 +7,7 @@ from . import items
 
 from . import users
 
-
+from .wallets import *
 
 
 class BaseMerchant(BaseModel):
@@ -15,6 +15,7 @@ class BaseMerchant(BaseModel):
     name: str
     description: Optional[str] = None
     tax_id: Optional[str] = None
+
     
 
 class CreatedMerchant(BaseMerchant):
