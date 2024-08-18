@@ -35,7 +35,7 @@ class DBMerchant(BaseMerchant, SQLModel, table=True):
     
     #wallets: list["wallets.DBWallet"] = Relationship(back_populates="merchant", cascade_delete=True)
     user_id: int = Field(default=None, foreign_key="users.id")
-    user: users.DBUser | None = Relationship()
+    user: users.DBUser | None = Relationship(back_populates="merchant")
 
 class MerchantList(BaseModel):
     model_config = ConfigDict(from_attributes=True)

@@ -34,7 +34,7 @@ class DBItem(SQLModel, Item, table=True):
     #merchant: merchants.DBMerchant | None = Relationship(back_populates="items")
 
     user_id: int = Field( default=None, foreign_key="users.id")
-    user: DBUser | None = Relationship()
+    user: DBUser | None = Relationship(back_populates="item")
     role: UserRole = Field(default=None)
 class ItemList(BaseModel):
     model_config = ConfigDict(from_attributes=True)

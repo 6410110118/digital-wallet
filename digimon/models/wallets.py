@@ -33,7 +33,7 @@ class DBWallet(Wallet, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     balance: float
     
-    user : DBUser | None = Relationship()
+    user : DBUser | None = Relationship(back_populates="wallets")
     user_id: int = Field(default=None, foreign_key="users.id")
     #customer_id: int = Field(default=None, foreign_key="customers.id" )
     #customer: Optional["DBCustomer"] = Relationship(back_populates="wallets")

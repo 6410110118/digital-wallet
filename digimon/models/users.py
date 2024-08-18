@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from .wallets import DBWallet
     from .items import DBItem
     from .merchants import DBMerchant
+    from .customers import DBCustomer
     
 from enum import Enum
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -105,7 +106,10 @@ class DBUser(BaseUser, SQLModel, table=True):
     updated_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
     last_login_date: datetime.datetime | None = Field(default=None)
     #wallets_id: int | None = Field(default=None, foreign_key="wallets.id")
-    wallets: List["DBWallet"] = Relationship(back_populates="user")
+    wallets: List["DBWallet"] = Relationship(back_populates="user", cascade_delete=True)
+    item: List["DBItem"] = Relationship(back_populates="user", cascade_delete=True)
+    merchant: List["DBMerchant"] = Relationship(back_populates="user", cascade_delete=True)
+    customer: List["DBCustomer"] = Relationship(back_populates="user" , cascade_delete=True)
     
 
     
