@@ -8,7 +8,9 @@ from sqlmodel import Relationship, SQLModel, Field
 from passlib.context import CryptContext
 if TYPE_CHECKING:
     from .wallets import DBWallet
-
+    from .items import DBItem
+    from .merchants import DBMerchant
+    
 from enum import Enum
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -104,6 +106,7 @@ class DBUser(BaseUser, SQLModel, table=True):
     last_login_date: datetime.datetime | None = Field(default=None)
     #wallets_id: int | None = Field(default=None, foreign_key="wallets.id")
     wallets: List["DBWallet"] = Relationship(back_populates="user")
+    
 
     
     async def has_roles(self, roles):

@@ -71,6 +71,20 @@ async def register_merchant(
     await session.refresh(user)
     await session.refresh(dbmerchant)
 
+    wallet = models.DBWallet(
+        balance=0.0,  # You can set the initial balance to 0 or any other value
+        user_id=user.id , role=models.UserRole.merchant
+    )
+    session.add(wallet)
+
+    # Final commit
+    await session.commit()
+    
+    # Refresh to get the latest data
+    await session.refresh(user)
+    await session.refresh(dbmerchant)
+    await session.refresh(wallet)
+
     return models.Merchant.from_orm(dbmerchant)
 
 @router.post("/register_customer")
@@ -116,7 +130,7 @@ async def register_customer(
     wallet = models.DBWallet(
         balance=0.0,  # You can set the initial balance to 0 or any other value
         user_id=user.id,
-        customer_id=dbcustomer.id
+        role=models.UserRole.customer
        
     )
     session.add(wallet)
@@ -200,3 +214,18 @@ async def update(
     await session.refresh(user)
 
     return user
+
+@router.delete("/{user_id}")
+async def delete_user(
+    user_id: int,
+    current_user: Annotated[models.User, Depends(deps.get_current_user)],
+    session: Annotated[AsyncSession, Depends(models.get_session)],
+) -> dict:
+    db_user = await session.get(models.DBUser, user_id)
+    if db_user:
+        await session.delete(db_user)
+        await session.commit()
+
+
+        return dict(message="delete success")
+    raise HTTPException(status_code=404, detail="user not found")
