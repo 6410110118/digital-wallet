@@ -76,13 +76,3 @@ async def update_merchant(
 
     return Merchant.from_orm(db_merchant)
 
-
-@router.delete("/{merchant_id}")
-async def delete_merchant(
-    merchant_id: int, session: Annotated[AsyncSession, Depends(get_session)]
-) -> dict:
-    db_merchant = await session.get(DBMerchant, merchant_id)
-    await session.delete(db_merchant)
-    await session.commit()
-
-    return dict(message="delete success")
