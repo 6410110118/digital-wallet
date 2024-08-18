@@ -79,11 +79,18 @@ async def create_item(
             detail="Only merchants can create items."
         )
 
+    statement = select(models.DBMerchant).where(models.DBMerchant.user_id == current_user.id)
+    result = await session.exec(statement)
+    dbmerchant = result.one_or_none()
+
+
     # Create the item
     data = item.dict()
-    dbitem = models.DBItem(**data, role=current_user.role)
+    dbitem = models.DBItem.from_orm(item)
+    dbitem.role = current_user.role
     
     dbitem.user = current_user
+    dbitem.merchant_id = dbmerchant.id
     session.add(dbitem)
     await session.commit()
     await session.refresh(dbitem)

@@ -29,9 +29,9 @@ class DBItem(SQLModel, Item, table=True):
     # Correctly define the primary key with default=None
     id: int = Field(default=None, primary_key=True)
     # Properly set foreign key reference
-    #merchant_id: int = Field(default=None, foreign_key="dbmerchant.id")
+    merchant_id: int = Field(default=None, foreign_key="dbmerchant.id")
     # Use proper type hints for relationship
-    #merchant: merchants.DBMerchant | None = Relationship(back_populates="items")
+    merchant: merchants.DBMerchant | None = Relationship(back_populates="items")
 
     user_id: int = Field( default=None, foreign_key="users.id")
     user: DBUser | None = Relationship(back_populates="item")
