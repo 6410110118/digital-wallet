@@ -31,7 +31,7 @@ class DBCustomer(BaseCustomer, SQLModel, table=True):
     user_id: int = Field(default=None, foreign_key="users.id")
     user: DBUser | None = Relationship()
 
-    wallets: list["DBWallet"] = Relationship(back_populates="customer")
+    #wallets: list["DBWallet"] = Relationship(back_populates="customer")
     
 
 class CustomerList(BaseModel):
