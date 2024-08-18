@@ -78,8 +78,7 @@ async def register_customer(
     user_info: models.RegisteredUser,
     customer_info: models.CreatedCustomer,
     session: Annotated[AsyncSession, Depends(models.get_session)],
-) -> models.Merchant:
-
+) -> models.Customer:
     # check username
     user_result = await session.execute(
         select(models.DBUser).where(models.DBUser.username == user_info.username)
@@ -104,13 +103,34 @@ async def register_customer(
     dbcustomer = models.DBCustomer(**customer_info.dict())
     dbcustomer.user = user
 
+    # Add customer to the session first
     session.add(dbcustomer)
+
+    # Commit to generate IDs
+    await session.commit()
+
+    # Refresh the customer to get the ID
+    await session.refresh(dbcustomer)
+    
+    # Create new wallet for the customer with valid user_id and customer_id
+    wallet = models.DBWallet(
+        balance=0.0,  # You can set the initial balance to 0 or any other value
+        user_id=user.id,
+        customer_id=dbcustomer.id
+       
+    )
+    session.add(wallet)
+
+    # Final commit
     await session.commit()
     
+    # Refresh to get the latest data
     await session.refresh(user)
     await session.refresh(dbcustomer)
-
+    await session.refresh(wallet)
+    
     return models.Customer.from_orm(dbcustomer)
+
 
 
 

@@ -28,6 +28,7 @@ class BaseUser(BaseModel):
 class User(BaseUser):
     id: int
     role: UserRole
+
     last_login_date: datetime.datetime | None = pydantic.Field(
         example="2023-01-01T00:00:00.000000", default=None
     )
@@ -103,6 +104,7 @@ class DBUser(BaseUser, SQLModel, table=True):
     last_login_date: datetime.datetime | None = Field(default=None)
     #wallets_id: int | None = Field(default=None, foreign_key="wallets.id")
     wallets: List["DBWallet"] = Relationship(back_populates="user")
+
     
     async def has_roles(self, roles):
         for role in roles:
