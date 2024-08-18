@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlmodel import Field, SQLModel,Relationship
 
 from .users import *
+from .wallets import *
 
 class BaseCustomer(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -29,6 +30,8 @@ class DBCustomer(BaseCustomer, SQLModel, table=True):
     
     user_id: int = Field(default=None, foreign_key="users.id")
     user: DBUser | None = Relationship()
+
+    wallets: list["DBWallet"] = Relationship(back_populates="customer")
     
 
 class CustomerList(BaseModel):
