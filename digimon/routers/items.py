@@ -1,5 +1,5 @@
 import math
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends , status
 from typing import Optional, List, Annotated
 from sqlalchemy import func
 from sqlmodel import Field, SQLModel, select
@@ -69,12 +69,20 @@ async def read_items(
 @router.post("")
 async def create_item(
     item: models.CreatedItem,
-
     session: Annotated[AsyncSession, Depends(models.get_session)],
     current_user: models.User = Depends(deps.get_current_user),
 ) -> models.Item | None:
+    # Check if the current user is a merchant
+    if current_user.role != "merchant" :
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only merchants can create items."
+        )
+
+    # Create the item
     data = item.dict()
-    dbitem = models.DBItem(**data)
+    dbitem = models.DBItem(**data, role=current_user.role)
+    
     dbitem.user = current_user
     session.add(dbitem)
     await session.commit()
