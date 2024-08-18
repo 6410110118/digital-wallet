@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from .items import DBItem
     from .merchants import DBMerchant
     from .customers import DBCustomer
+    from .transactions import DBTransection
     
 from enum import Enum
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -110,7 +111,7 @@ class DBUser(BaseUser, SQLModel, table=True):
     item: List["DBItem"] = Relationship(back_populates="user", cascade_delete=True)
     merchant: List["DBMerchant"] = Relationship(back_populates="user", cascade_delete=True)
     customer: List["DBCustomer"] = Relationship(back_populates="user" , cascade_delete=True)
-    
+    #transaction : List["DBTransection"] = Relationship(back_populates="user", cascade_delete=True)
 
     
     async def has_roles(self, roles):
