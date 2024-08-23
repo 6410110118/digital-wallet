@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends , status
 
 from typing import Optional, Annotated
 from sqlmodel import Field, SQLModel, create_engine, Session, select
@@ -16,6 +16,11 @@ async def buy_item(
     session: Annotated[AsyncSession, Depends(models.get_session)],
     current_user: models.User = Depends(deps.get_current_user),
 ):
+    if current_user.role != "customer" :
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only customer can buy items."
+        )
     statement = select(models.DBItem).where(models.DBItem.id == transaction.item_id)
     result = await session.exec(statement)
     dbitem = result.one_or_none()
