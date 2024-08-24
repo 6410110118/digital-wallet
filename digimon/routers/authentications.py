@@ -40,14 +40,14 @@ async def authentication(
         )
         user = result.one_or_none()
 
-    print("user", user)
+    
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
 
-    print("userx", user, await user.verify_password(form_data.password))
+    
     if not await user.verify_password(form_data.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -77,4 +77,5 @@ async def authentication(
         expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES,
         expires_at=datetime.datetime.now() + access_token_expires,
         issued_at=user.last_login_date,
+        user_id=user.id,
     )

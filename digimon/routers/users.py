@@ -63,6 +63,8 @@ async def register_merchant(
 
     # create new merchant
     dbmerchant = models.DBMerchant(**merchant_info.dict())
+   
+    dbmerchant = models.DBMerchant.model_validate(merchant_info)
     dbmerchant.user = user
 
     session.add(dbmerchant)
@@ -85,7 +87,7 @@ async def register_merchant(
     await session.refresh(dbmerchant)
     await session.refresh(wallet)
 
-    return models.Merchant.from_orm(dbmerchant)
+    return models.Merchant.model_validate(dbmerchant)
 
 @router.post("/register_customer")
 async def register_customer(

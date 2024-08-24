@@ -5,7 +5,7 @@ import pydantic
 from pydantic import BaseModel, EmailStr, ConfigDict
 from sqlmodel import Relationship, SQLModel, Field
 
-from passlib.context import CryptContext
+#from passlib.context import CryptContext
 if TYPE_CHECKING:
     from .wallets import DBWallet
     from .items import DBItem
@@ -14,8 +14,8 @@ if TYPE_CHECKING:
     from .transactions import DBTransection
     
 from enum import Enum
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+#pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
 
 class UserRole(str, Enum):
     merchant = "merchant"
@@ -23,30 +23,29 @@ class UserRole(str, Enum):
 
 class BaseUser(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
-    email: str = pydantic.Field(example="admin@email.local")
-    username: str = pydantic.Field(example="admin")
-    first_name: str = pydantic.Field(example="Firstname")
-    last_name: str = pydantic.Field(example="Lastname")
-
+    email: str = pydantic.Field(json_schema_extra=dict(example="admin@email.local"))
+    username: str = pydantic.Field(json_schema_extra=dict(example="admin"))
+    first_name: str = pydantic.Field(json_schema_extra=dict(example="Firstname"))
+    last_name: str = pydantic.Field(json_schema_extra=dict(example="Lastname"))
 
 class User(BaseUser):
     id: int
     role: UserRole
 
     last_login_date: datetime.datetime | None = pydantic.Field(
-        example="2023-01-01T00:00:00.000000", default=None
+        json_schema_extra=dict(example="2023-01-01T00:00:00.000000"), default=None
     )
     register_date: datetime.datetime | None = pydantic.Field(
-        example="2023-01-01T00:00:00.000000", default=None
+        json_schema_extra=dict(example="2023-01-01T00:00:00.000000"), default=None
     )
     
 
 
 class ReferenceUser(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
-    username: str = pydantic.Field(example="admin")
-    first_name: str = pydantic.Field(example="Firstname")
-    last_name: str = pydantic.Field(example="Lastname")
+    username: str 
+    first_name: str 
+    last_name: str 
 
 
 class UserList(BaseModel):
@@ -70,7 +69,7 @@ class ResetedPassword(BaseModel):
 
 
 class RegisteredUser(BaseUser):
-    password: str = pydantic.Field(example="password")
+    password: str = pydantic.Field(json_schema_extra=dict(example="password"))
 
 
 class UpdatedUser(BaseUser):
@@ -89,6 +88,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     user_id: str | None = None
+    user_id: int
 
 
 class ChangedPasswordUser(BaseModel):
@@ -119,13 +119,14 @@ class DBUser(BaseUser, SQLModel, table=True):
             if role in self.roles:
                 return True
         return False
-
+    async def get_encrypted_password(self, plain_password):
+        return bcrypt.hashpw(
+            plain_password.encode("utf-8"), salt=bcrypt.gensalt()
+        ).decode("utf-8")
     async def set_password(self, plain_password):
-        self.password = pwd_context.hash(plain_password)
+        self.password = await self.get_encrypted_password(plain_password)
 
     async def verify_password(self, plain_password):
-        print(plain_password, self.password)
-        return pwd_context.verify(plain_password, self.password)
-
-    async def is_use_citizen_id_as_password(self):
-        return pwd_context.verify(self.citizen_id, self.password)
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"), self.password.encode("utf-8")
+        )

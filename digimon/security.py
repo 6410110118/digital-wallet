@@ -5,18 +5,19 @@ import jwt
 
 from . import config
 
+import datetime
 
 ALGORITHM = "HS256"
 
 settings = config.get_settings()
 
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def create_access_token(data: dict, expires_delta: datetime.timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.datetime.now(tz=datetime.timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(
+        expire = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
     to_encode.update({"exp": expire})
@@ -28,9 +29,9 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 def create_refresh_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.now() + expires_delta
+        expire = datetime.datetime.now(tz=datetime.timezone.utc) + expires_delta
     else:
-        expire = datetime.now() + timedelta(
+        expire = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(
             minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES
         )
     to_encode.update({"exp": expire})
