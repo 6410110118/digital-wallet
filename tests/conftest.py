@@ -1,3 +1,6 @@
+import sys
+import os
+
 import asyncio
 from contextlib import asynccontextmanager
 
@@ -8,6 +11,7 @@ from httpx import AsyncClient, ASGITransport
 
 from typing import Any, Dict, Optional
 from pydantic_settings import SettingsConfigDict
+from sqlmodel import select
 
 from digimon import models, config, main, security
 import pytest
@@ -17,6 +21,10 @@ import pathlib
 import datetime
 
 
+
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 SettingsTesting = config.Settings
 SettingsTesting.model_config = SettingsConfigDict(
     env_file=".testing.env", validate_assignment=True, extra="allow"
@@ -24,15 +32,15 @@ SettingsTesting.model_config = SettingsConfigDict(
 
 
 @pytest.fixture(name="app", scope="session")
-def app_fixture():
+async def app_fixture():
     settings = SettingsTesting()
     path = pathlib.Path("test-data")
     if not path.exists():
         path.mkdir()
 
-    app = main.create_app(settings)
+    app = main.create_app()
 
-    asyncio.run(models.recreate_table())
+    asyncio.run(models.create_all())
 
     yield app
 
@@ -64,7 +72,7 @@ async def example_user1(session: models.AsyncSession) -> models.DBUser:
     username = "user1"
 
     query = await session.exec(
-        models.select(models.DBUser).where(models.DBUser.username == username).limit(1)
+        select(models.DBUser).where(models.DBUser.username == username).limit(1)
     )
     user = query.one_or_none()
     if user:
